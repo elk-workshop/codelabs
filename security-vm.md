@@ -41,7 +41,7 @@ Duration: 5
 
 本课程所使用到的 Elastic Stack 的组件包括：
 
-* Elasticsearch、Kibana、Packetbeat、Filebeat、Auditbeat 版本是 7.11. 2。
+* Elasticsearch、Kibana、Packetbeat、Filebeat、Auditbeat 版本是 7.11. 0。
 
 * Suricata 版本 5.0.6，开源入侵监测引擎。
 
@@ -167,7 +167,7 @@ sudo systemctl start elasticsearch.service
 sudo systemctl status elasticsearch
 ```
 
-使用 `sudo tail -f /var/log/elasticsearch/elk-es01.log ` 命令查看当前 Elasticsearch 服务的日志。
+使用 `sudo tail -f /var/log/elasticsearch/elk-sec01.log ` 命令查看当前 Elasticsearch 服务的日志。
 
 初始化 ES 服务器内建用户的密码。
 
@@ -295,7 +295,7 @@ PUT _ingest/pipeline/geoip-info
   ]
 }
 
- GET _ingest/pipeline/geoip-info
+GET _ingest/pipeline/geoip-info
 ```
 
 将左侧编辑器文本框中的光标移动到 `PUT _ingest/pipeline/geoip-info` 这一行，点击右侧扳手图标傍边的三角按钮，执行 pipeline 创建操作。
@@ -304,17 +304,23 @@ PUT _ingest/pipeline/geoip-info
 
 点击 GET _ingest/pipeline/geoip-info 这个语句右侧的三角形，查看刚才创建的流水线的信息。
 
+Negative
+: 注意：这个数据丰富流水线会在 Beats 的配置文件中触发，必须正确创建以上流水线，才能顺利完成后续练习。
+
 ####启用 ELK 技术栈自监控
 
-点击 Kibana 左上角菜单中点击 “堆栈监控”，启用自监控，结果如下所示。
+点击 Kibana 左上角菜单中点击 “堆栈监控”，点击按钮下方的文字链接 “**或，使用内部收集设置**”， 点开“打开监控” 按钮，启用自监控（监控数据驻留在本集群内部），结果如下所示。
 
 ![2021-03-25_15-01-45](images/security-vm/2021-03-25_15-01-45.png)
 
 在以上的监控功能中，特别是 Beats 这一块，能看到各种 Beats 在被监控节点上的部署结果和运行现状，在后续的测试过程中，建议多次访问这个监控页面查看安装配置结果。
 
+Negative
+: 注意：这个监控页面需要依赖于 Beats 的配置文件中启用了监控功能，建议在所有 Beats 配置文件中打开这个开关。
+
 ####启用企业版许可 30 天试用
 
-点击 Kibana 左上角菜单中点击 “Stack Management” --> “许可管理”，点击 “开始使用” 按钮，启用 30 天的高级功能的试用期。
+点击 Kibana 左上角菜单中点击 “Stack Management” --> “许可管理”，点击 “开始试用” 按钮，启用 30 天的高级功能的试用期。
 
 ![2021-03-25_15-07-47](images/security-vm/2021-03-25_15-07-47.png)
 
@@ -463,7 +469,10 @@ sudo systemctl start  auditbeat
 sudo systemctl status  auditbeat
 ```
 
-注意：以上的这两条命令  auditbeat **test config** 和  auditbeat **test output** 适用于后续的其它 Beats 的启动前测试。
+
+
+Negative
+: 注意：以上的这两条测试命令  auditbeat **test config** 和  auditbeat **test output** 适用于后续的其它 Beats 的启动前测试。它们能确保 Beats 服务使用目标配置文件正确运行。
 
 如果上面的服务启动结果正常，很快的下面可以在 Kibana 的 Discovery 功能中，查看  Auditbeat-* 这个索引的数据。
 
@@ -779,6 +788,9 @@ Duration: 15
 
 这样就定义了一个典型的可以重复使用的搜索分析场景，这个时间线也可以逐渐迭代和进化它的搜索条件，调整输出的字段，从而调整它的精度和用途。
 
+Negative
+: 注意：时间线是人工安全事件巡检分析的入口，利用它在一个界面中执行分析和搜索操作，它默认使用来自所有数据源的事件。
+
 #### 创建安全事故分析案例
 
 当某个时间线的分析结果被判定为安全事故之后，就需要根据它来创建一个故障调查案例，这是 SIEM 的常用场景。点击时间线右上角的 “附加到案例”，选择 “附加到新案例” 选项，进入新建案例界面，如下图所示：
@@ -795,7 +807,8 @@ Elastic Security 也是一个团队协作平台，这个开放式协作平台，
 6. 在案例页面上查看该新建案例，添加后续的调查分析注释，点击 “进行中” 按钮。
 7. 查看当前案例的状态，在事故调查完毕后，可以点击“关闭案例”按钮。
 
-
+Negative
+: 注意：人工安全分析的结果，加 ML 自动分析的结果，加内部外部的安全情报分析等等都会触发 SecOps 人员创建进一步调查案例，立案调查是为了锁定和消除安全风险根因。
 
 #### 基于 EQL 的复杂用户登录分析
 
@@ -842,13 +855,14 @@ sequence by host.name, source.ip, user.name  with maxspan=15s
 * authentication ： 事件的类型，其它可能的类型还包括：进程、文件、网络等等。
 * event.outcome == "failure" ： 匹配该字段的值为失败的结果。
 
-
-
 通过以上的操作，我们可以体会到 EQL 的优势包括：
 
 * EQL 让你表达事件之间的关系：许多查询语言允许您匹配单个事件。EQL可以让您在不同的事件类别和时间跨度上匹配一个事件序列。
 * EQL的学习曲线很低：EQL语法看起来像其他常见的查询语言，如SQL。EQL让您直观地编写和读取查询，这使得快速、反复搜索。
 * EQL是为安全管理用例设计的：虽然您可以将其用于任何基于事件的数据，但我们创建EQL用于威胁狩猎。EQL不仅支持妥协指标（indicator of compromise  IOC）搜索，而且可以描述超越IOC的活动。
+
+Negative
+: 注意：EQL 是专门为安全狩猎、为复杂性较高的安全分析而生的；不仅可以在 Kibana SIEM 的时间线--> “相关性” 这个界面中使用，而且可以直接通过 Elasticsearch 的 API调用 ` /_eql/` 完成所有搜索功能，这也是和其它系统集成的接口。
 
 ## 安全威胁狩猎
 
@@ -861,8 +875,8 @@ Elastic Security 目前内置了 500 多条安全检测规则，这些规则默�
 #### 启用内置检测规则
 
 1. 在 Kibana 的菜单中，点击 Security 下面的 “检测”
-2. 点击 “管理检测规则” 按钮。
-3. 点击 “加载 Elastic 预构建规则” 按钮。
+2. 点击 “**管理检测规则**” 按钮。
+3. 点击 “**加载 Elastic 预构建规则**” 按钮。
 4. 很快的，你就可以看到 7.12 版本内置的 546 条规则的，规则清单。
 5. 点击标签，输入并选择 Linux，这筛选出来了 75 条规则。
 6. 点击页面左下角的 每页行数 链接，选择 100 ，浏览所有规则名称清单。
@@ -875,7 +889,8 @@ Elastic Security 目前内置了 500 多条安全检测规则，这些规则默�
 1. 登录操作系统
 2. 运行 `sudo vi /etc/hosts` 命令，在这个文件中，随意加入一条 dns 解析记录。保存退出。 
 3. 等待 5 分钟之后，观察 安全 应用的首页，和 “检测” 页面中的更新情况。
-4. 等待数分钟之后，应该能看到如下的结果。
+4. 在等待的过程中，创建这个规则的副本名为“【工作坊】Hosts File Modified”，并且编辑所有可以编辑的选项。
+5. 等待数分钟之后，应该能看到如下的结果。
 
 ![2021-03-26_01-27-06](images/security-vm/2021-03-26_01-27-06.png)
 
@@ -930,6 +945,9 @@ Elastic Security 目前内置了 500 多条安全检测规则，这些规则默�
 
 自定义规则可以是企业环境中特定的安全威胁检测机制，如果这种特定威胁已经发生过了，那么SecOps 团队应该马上进行消除工作，在消除了威胁造成的影响后，为了防止这个威胁的复发，应该创建对应的检测规则，并定期执行和告警，这种工作方式可以日积月累出很多扎实的威胁狩猎知识库。
 
+Negative
+: 注意：Elastic Security 内置规则，加上企业安全分析师有的放矢的安全狩猎都会逐步让规则检测库丰富和完善。基于规则的自动化巡检消除了大量日常手工重复安全巡视的工作量。所有启用的规则经过定期的优化、调校和测试会变得更加精准。
+
 ## 外部系统集成
 
 Duration: 20
@@ -953,7 +971,7 @@ sudo suricata-update
 
 查看虚拟机的网卡接口，并确认配置文件中使用了网卡。
 
-在 Vagrant 的虚拟机中，这里的配置需要修改 配置文件，将默认的 eth0 修改为 eth1 。
+在 Vagrant 的虚拟机中，这里的配置需要修改 配置文件，将默认的 eth0 修改为 eth1 ，如果你的虚拟机只有一个网卡，则使用这个网卡的名称。
 
 ```sh
 sudo vi /etc/sysconfig/suricata
@@ -989,10 +1007,10 @@ sudo systemctl restart filebeat
 sudo dnf  -y install hping3
 ```
 
-然后执行一下的模拟攻击命令，下面的 IP 地址是本测试环境的配置。
+然后执行以下的模拟攻击命令，下面的 IP 地址是本测试环境的配置。
 
 ```sh
-hping3 -S -p 22 --flood --rand-source 192.168.50.11
+sudo hping3 -S -p 22 --flood --rand-source 192.168.50.11
 ```
 
 使用另外一个 ssh 登录终端窗口，运行下面的命令，观察 suricata 的实时监测状况。
@@ -1001,7 +1019,7 @@ hping3 -S -p 22 --flood --rand-source 192.168.50.11
 sudo tail -f /var/log/suricata/fast.log
 ```
 
-在保持一分钟以后，分别停止上面两条命令，终止这次攻击测试。下面查看结果。一下仪表板和界面的数据显示，最长可能会有 5 分钟的延迟。
+在保持一分钟以后，分别停止上面两条命令，终止这次攻击测试。下面查看结果。以下仪表板和界面的数据显示，最长可能会有 5 分钟的延迟。
 
 下面是 Filebeat 模块自带的 Suricata 仪表板的分析视图。下面是 Suricata 的事件统计分析视图。
 
@@ -1027,6 +1045,9 @@ Suricata 规则所触发告警的安全事故。
 
 1. 优化 Suricata 的规则
 2. 优化 Suricata 的告警规则，减少噪音和假阳性告警
+
+Negative
+: 注意：想一想你的其它昂贵的安全管理工具的数据都发挥了应有的价值了么？如果这些工具集的数据的价值无法通过一种统一的数据定义标准化起来，就无法
 
 ## 机器学习加持安全管理
 
