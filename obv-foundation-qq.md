@@ -44,7 +44,7 @@ Duration: 10
 
 Elastic Stack 的基本状况：
 
-* 版本 7.5.1
+* 版本 7.10.1
 * Elastic Stack 的相关组件包括 Elasticsearch、Kibana、APM、Filebeat、Metricbeat 和 Heartbeat。
 * 宠物诊所应用、Elastic APM Server 和 Heartbeat 探针服务都部署在同一个虚拟机上。
 
@@ -70,7 +70,7 @@ Elastic Stack 的基本状况：
 最后，通过 SLO 服务质量目标监控大屏，实时的将生产环境的状态反馈给所有相关团队。最后收尾以基于 SLO 的服务故障监控告警（本课程不涉及告警的配置，告警可以用 Elastic Stack 的 watcher 实现）。
 
 ## 前置需求 
-Duration: 40
+Duration: 10
 
 检查清单如下：
 
@@ -92,7 +92,11 @@ CentOS 虚拟机开放如下入栈端口：
 
 登录腾讯云控制台，搜索 Elasticsearch Service 产品，进入该产品控制台，点击 “新建” 集群按钮。
 
+    在选择 Elasticsearch 版本的时候请选择最新的版本，本教程尽量和最新的版本保护一致，也适用于相近的旧版本。
+
 ![13981608079985_.pic_hd](images/13981608079985_.pic_hd.jpg)
+
+
 
 注意：以上配置选项适用于本次培训的需求，其中数据节点数量还可以降低到 2个。Elasticsearch 的版本选择最高，高级特性选择“白金版”
 
@@ -138,9 +142,9 @@ yum install -y java-11-openjdk.x86_64 nodejs git nginx
 然后下载本次培训所需要的示例程序和相关配置文件。
 
 ```
-git clone https://github.com/martinliu/elastic-labs-qq.git
+git clone https://gitee.com/devopscoach/elastic-labs-qq.git
 cd elastic-labs-qq
-cd petclinic
+cd petclinic/frontend/
 npm install
 ```
 
@@ -172,7 +176,7 @@ SSH 登录 CentOS 虚拟机后，安装 Heartbeat 软件包。
 
 
 ```
-yum install https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.5.1/heartbeat-7.5.1-x86_64.rpm
+yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.1/heartbeat-7.10.1-x86_64.rpm
 ```
 
 进入 heartbeat 的配置文件目录中，`cd /etc/heartbeat/`。
@@ -223,13 +227,17 @@ processors:
 
 命令如下：
 
-```
+```shell
+heartbeat test confg
+heartbeat test output
+
 heartbeat setup
 heartbeat -e
 ```
 
 命令参数解释：
 
+* test 命令是检查配置文件的语法和与 Elasticsearch 服务的连接和认证是否正常
 * setup 的作用是初始化 Heartbeat 的索引，导入相关的数据管理策略
 * -e 启动 Heartbeat 服务，将服务运行的日志显示在控制台
 
@@ -270,8 +278,8 @@ Positive
 
 命令如下：
 
-```
-yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.5.1/metricbeat-7.5.1-x86_64.rpm
+```sh
+yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.1/metricbeat-7.10.1-x86_64.rpm
 ```
 
 进入 Metricbeat 的配置文件目录` cd /etc/metricbeat/`，查看 Metricbeat 的配置目录，熟悉目录中的结构和文件。
@@ -281,7 +289,7 @@ yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.5.1/metr
 
 在命令行下运行下面的两条命令，在执行前根据下面的参数解释，替换其中的三个参数。
 
-```
+```sh
 metricbeat setup -e   --index-management   --dashboards \
   -E output.elasticsearch.hosts=['172.21.16.16:9200']   \
   -E output.elasticsearch.username=elastic   \
@@ -299,8 +307,8 @@ metricbeat setup -e   --index-management   --dashboards \
 等待该命令的执行结束后，会输出类似如下的信息。
 
 ```
-template metricbeat-7.5.1 to Elasticsearch
-2020-12-16T15:55:02.537+0800    INFO    template/load.go:101    template with name 'metricbeat-7.5.1' loaded.
+template metricbeat-7.10.1 to Elasticsearch
+2020-12-16T15:55:02.537+0800    INFO    template/load.go:101    template with name 'metricbeat-7.10.1' loaded.
 2020-12-16T15:55:02.538+0800    INFO    [index-management]      idxmgmt/std.go:293      Loaded index template.
 2020-12-16T15:55:03.092+0800    INFO    [index-management]      idxmgmt/std.go:304      Write alias successfully generated.
 Index setup finished.
@@ -315,8 +323,8 @@ Loaded dashboards
 在 Kibana 中查看 metricbeat 的索引、索引管理策略和相关的仪表板。
 
 * 点击左侧 `Dashboard` 图标，查看 Metricbeat 相关的仪表板。
-* 点击左侧 `Management` 图标，点击 Elasticsearch --> Index Lifecycle Policies 选项，在策略清单中选中 ‘metricbeat-7.5.1’， 在页面的底部，找到 Delete phase 部分，点击激活删除策略，在 ‘Timing for delete phase’ 中输入 `120` 这意味着，rollover 之后的数据文件中，超过了 `120` 天的数据就会被删除。目前这个演示系统并没有使用 热-温-冷 等复杂的索引数据生命周期管理策略。
-* 点击 ‘heartbeat-7.5.1’ 的策略，也设置同样的这个 120 天删除的策略。后续的索引初始化配置完毕之后，也在这里做相同的操作。从而熟悉掌握这个配置。
+* 点击左侧 `Management` 图标，点击 Elasticsearch --> Index Lifecycle Policies 选项，在策略清单中选中 ‘metricbeat-7.10.1’， 在页面的底部，找到 Delete phase 部分，点击激活删除策略，在 ‘Timing for delete phase’ 中输入 `120` 这意味着，rollover 之后的数据文件中，超过了 `120` 天的数据就会被删除。目前这个演示系统并没有使用 热-温-冷 等复杂的索引数据生命周期管理策略。
+* 点击 ‘heartbeat-7.10.1’ 的策略，也设置同样的这个 120 天删除的策略。后续的索引初始化配置完毕之后，也在这里做相同的操作。从而熟悉掌握这个配置。
 
 
 ### 编辑主配置文件
@@ -362,6 +370,7 @@ processors:
 setup.ilm.check_exists: false
 logging.level: error
 queue.spool: ~
+monitoring.enabled: true
 ```
 
 以上个别参数解释：
@@ -379,6 +388,8 @@ queue.spool: ~
 
 ```
 metricbeat test config
+metricbeat test output
+
 systemctl enable  metricbeat
 systemctl start  metricbeat
 systemctl status  metricbeat
@@ -473,14 +484,14 @@ Positive
 通过网络安装 Filebeat 软件包。命令如下：
 
 ```
-yum install https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.5.1/filebeat-7.5.1-x86_64.rpm
+yum install -y https://mirrors.tencent.com/elasticstack/7.x/yum/7.10.1/filebeat-7.10.1-x86_64.rpm
 ```
 
 进入 `cd /etc/metricbeat/` 目录，熟悉 Filebeat 配置文件的目录结构和内容。
 
 ### 初始化 Filebeat 服务
 
-在命令行下运行下面的两条命令，在执行前根据下面的参数解释，替换其中的三个参数。
+在命令行下运行下面的两条命令，在执行前根据下面的参数解释，替换其中的四个参数。
 
 ```
 filebeat setup -e   --index-management   --dashboards \
@@ -501,8 +512,8 @@ filebeat setup -e   --index-management   --dashboards \
 
 ```
 2020-12-16T22:01:36.164+0800    INFO    template/load.go:169    Existing template will be overwritten, as overwrite is enabled.
-2020-12-16T22:01:36.343+0800    INFO    template/load.go:109    Try loading template filebeat-7.5.1 to Elasticsearch
-2020-12-16T22:01:36.535+0800    INFO    template/load.go:101    template with name 'filebeat-7.5.1' loaded.
+2020-12-16T22:01:36.343+0800    INFO    template/load.go:109    Try loading template filebeat-7.10.1 to Elasticsearch
+2020-12-16T22:01:36.535+0800    INFO    template/load.go:101    template with name 'filebeat-7.10.1' loaded.
 2020-12-16T22:01:36.535+0800    INFO    [index-management]      idxmgmt/std.go:293      Loaded index template.
 2020-12-16T22:01:36.806+0800    INFO    [index-management]      idxmgmt/std.go:304      Write alias successfully generated.
 Index setup finished.
@@ -517,7 +528,7 @@ Loaded dashboards
 在 Kibana 中查看 filebeat 的索引、索引管理策略和相关的仪表板。
 
 * 点击左侧 `Dashboard` 图标，查看 Filebeat 相关的仪表板。
-* 点击左侧 `Management` 图标，点击 Elasticsearch --> Index Lifecycle Policies 选项，在策略清单中选中 ‘filebeat-7.5.1’， 在页面的底部，找到 Delete phase 部分，点击激活删除策略，在 ‘Timing for delete phase’ 中输入 `120` 这意味着，rollover 之后的数据文件中，超过了 `120` 天的数据就会被删除。目前这个演示系统并没有使用 热-温-冷 等复杂的索引数据生命周期管理策略。
+* 点击左侧 `Management` 图标，点击 Elasticsearch --> Index Lifecycle Policies 选项，在策略清单中选中 ‘filebeat-7.10.1’， 在页面的底部，找到 Delete phase 部分，点击激活删除策略，在 ‘Timing for delete phase’ 中输入 `120` 这意味着，rollover 之后的数据文件中，超过了 `120` 天的数据就会被删除。目前这个演示系统并没有使用 热-温-冷 等复杂的索引数据生命周期管理策略。
 
 本步骤是一次性的，在后续的其它被管理节点上就不需要再次执行 Beats 的任何 setup 命令了。
 
@@ -530,7 +541,7 @@ Loaded dashboards
 #=========================== Filebeat inputs =============================
 filebeat.inputs:
 - type: log
-  enabled: false
+  enabled: true
   paths:
     - /var/log/*.log
 
@@ -572,6 +583,7 @@ processors:
 setup.ilm.check_exists: false
 logging.level: error
 queue.spool: ~
+monitoring.enabled: true
 ```
 
 以上参数解释：
@@ -584,6 +596,7 @@ queue.spool: ~
 
 ```
 filebeat test config
+filebeat test output
 filebeat -e
 ```
 如果以上命令不报错的话，继续下面的步骤启用 Filebeat 模块和启动 Filebeat 服务。
@@ -671,7 +684,7 @@ Positive
 安装 APM Server 软件。
 
 ```
-yum install https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.5.1/apm-server-7.5.1-x86_64.rpm
+yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.1/apm-server-7.10.1-x86_64.rpm
 cd /etc/apm-server/
 ```
 
@@ -700,6 +713,9 @@ output.elasticsearch:
 在命令行下初始化 APM 服务器。命令相同。
 
 ```
+apm-server test config
+apm-server test output
+
 apm-server setup
 apm-server -e
 ```
@@ -926,7 +942,7 @@ Positive
 
 * Aggregation : Percentile 是对 field 的数据做的百分位聚会运算，得出该指标在 p70，p90 下的表现。
 * Field : 选择的是 http.rtt.total.us ，这是 Heartbeat 的 HTTP 探针采集到的某个 http 端点的延迟时长，单位是 us。
-* Aggregation : Static Value 是对在图形上画一根静态的线，加上这个指标就是我们选中的宠物诊所应用系统的 SLI 之一，它反映出页面打开的延迟速度，我们对其设置的 SLO 管理目标是 6000。
+* Aggregation : Static Value 是对在图形上画一根静态的线，加上这个指标就是我们选中的宠物诊所应用系统的 SLI 之一，它反映出页面打开的延迟速度，我们对其设置的 SLO 管理目标是 6000。在 Options 的选项中将参数 Fill (0 to 1) 设置为 0 。
 
 点击右上角的 Refresh 按钮，还可以在这个按钮的左侧菜单中选择不同的观测时段。
 
@@ -949,6 +965,20 @@ Positive
 点击每个图表右下角的三角图表，以上每个数据显示控件的大小都可以调整，位置都可以拖动。
 
 在点击日历图标之后，选择需要查看的监控时段，点击刷新按钮，更新这个仪表板中所有控件的数据。
+
+
+
+下面这是一个自选练习，是一个 SLO 监控大屏示例。
+
+
+
+![2020-11-05_00-13-06](images/2020-11-05_00-13-06.jpeg)
+
+下载名为 [canvas-workpad-petclinic.json](canvas-workpad-petclinic.json) 的示例文件。
+
+在 Kibana 左侧的菜单里选择 `Canvas` 画布菜单，点击 `Import workpad JSON file` 按钮，导入后既可以看到名为 `宠物商店：SLO管理监控大屏` 的监控画布。
+
+
 
 Negative
 : 本课程完成了 Elastic Stack 技术栈的所有主要功能模块的配置和使用。讲解了针对宠物医院这个多层次应用的可观测性构建，采集到了四个方面的可关联分析的时序数据流。还参考 SRE 的管理方法，创建了 SLI 的可视化数据指标监控图标，并为 SLI 设定了 SLO管理目标。最后将宠物诊所应用的所有 SLI/SLO 管理监控图表都集成到了一个统一的仪表板中。
