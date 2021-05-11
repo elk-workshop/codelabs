@@ -26,4 +26,4 @@ jobs:
       run: |
         curl -L https://github.com/googlecodelabs/tools/releases/download/v2.2.4/claat-linux-amd64 > claat
         chmod +x claat
-        ./claat *.md
+        ./claat export *.md
