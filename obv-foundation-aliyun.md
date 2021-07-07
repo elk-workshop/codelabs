@@ -15,7 +15,7 @@ Duration: 10
 
 在本课程中您将会学到：
 
-1. 在阿里云创建 Elasticsearch 集群，Kibana 图形管理界面的基本使用。
+1. 在阿里云创建 Elasticsearch 群集，Kibana 图形管理界面的基本使用。
 2. 学习可观测性的基本概念和实施步骤
 3. 搭建和配置服务健康检查的探针（Heartbeat）
 4. 部署采集操作系统性能监控指标的流程 （Metricbeat）
@@ -88,16 +88,16 @@ CentOS 虚拟机开放如下入栈端口：
 
 创建虚拟机用于本次培训的所有测试。
 
-### 创建一个 Elasticsearch 集群
+### 创建一个 Elasticsearch 群集
 
-登录阿里云控制台，搜索 Elasticsearch Service 产品，进入该产品控制台，点击 “新建” 集群按钮。
+登录阿里云控制台，搜索 Elasticsearch Service 产品，进入该产品控制台，点击 “新建” 群集按钮。
 
 在选择 Elasticsearch 版本的时候请选择最新的版本，本教程尽量和最新的版本保护一致，也适用于相近的旧版本。
 
 ![2021-05-11_22-53-42](images/o11y/2021-05-11_22-53-42.png)
 
 * 上面选择 “通用商业版” - 这是 Elastic 白金版的意思
-* 点击下一步，集群配置
+* 点击下一步，群集配置
 
 ![2021-05-11_22-53-51](images/o11y/2021-05-11_22-53-51.png)
 
@@ -107,24 +107,24 @@ CentOS 虚拟机开放如下入栈端口：
 ![2021-05-11_22-53-59](images/o11y/2021-05-11_22-53-59.png)
 
 * 专用网络和交换机选择和本练习所需虚拟机相同的设置
-* 设置集群的示例名称和登录密码，以上密码和本练习中的所有示例命令和配置文件中的相同
+* 设置群集的示例名称和登录密码，以上密码和本练习中的所有示例命令和配置文件中的相同
 * 点击先一步，确认订单
 
 ![2021-05-11_22-54-10](images/o11y/2021-05-11_22-54-10.png)
 
 * 最后确认以上所有配置
 * 点击 “立即购买”
-* 等待集群的创建
+* 等待群集的创建
 
 
 
-在等待了 5 到 10 分钟之后，新集群完成了整个创建过程，所有的数据节点都是绿色。
+在等待了 5 到 10 分钟之后，新群集完成了整个创建过程，所有的数据节点都是绿色。
 
 
 
-### 记录 ES 集群的基础信息
+### 记录 ES 群集的基础信息
 
-在集群创建后，下面收集和记录几个重要的配置信息。
+在群集创建后，下面收集和记录几个重要的配置信息。
 
 ![2021-05-11_23-13-45](images/o11y/2021-05-11_23-13-45.png)
 
@@ -143,9 +143,9 @@ CentOS 虚拟机开放如下入栈端口：
 
   
 
-注意：以上备注的 Elasticsearch 集群的内网访问地址，和 Kibana 的内网访问地址会在下面的配置操作中使用到。
+注意：以上备注的 Elasticsearch 群集的内网访问地址，和 Kibana 的内网访问地址会在下面的配置操作中使用到。
 
-最后，需要在 Kibana 的首页的右上角点击 Dev tools 图标，进入 开发者工具界面，建议不调整一个集群参数（此参数仅供测试目的）。
+最后，需要在 Kibana 的首页的右上角点击 Dev tools 图标，进入 开发者工具界面，建议不调整一个群集参数（此参数仅供测试目的）。
 
 
 ```
@@ -162,7 +162,7 @@ PUT _all/_settings
 
 ### 虚拟机环境基础配置
 
-在于 Elasticsearch 集群相同网段的 VPC 中创建一台 CentOS 7.6 虚拟机，内存不低于 4GB。创建成功后，进行如下的初始化配置。
+在于 Elasticsearch 群集相同网段的 VPC 中创建一台 CentOS 7.6 虚拟机，内存不低于 4GB。创建成功后，进行如下的初始化配置。
 
 
 
@@ -214,22 +214,22 @@ root@beats-o11y01 elastic-labs-qq]# curl --user elastic:Elastic@1234# http://es-
 
 * curl 用于测试 ES 登录的命令行工具
 * --user elastic:Elastic@1234#  登录 ES 服务的用户名和密码，请使用你自己的密码登录
-* 最后的网址是 ES 集群的私网地址
+* 最后的网址是 ES 群集的私网地址
 
 如果看到以上正常的 Elasticsearch 版本信息的输出，这就说明：
 
-* centos 虚拟机到 ES 集群的网络畅通
+* centos 虚拟机到 ES 群集的网络畅通
 
 * 用户名和密码正确
 
-* 所记录待用的 Elasticsearch集群私网地址 正确无误
+* 所记录待用的 Elasticsearch群集私网地址 正确无误
 
   
 
 
 
 Negative
-: 检查点：已经正常登陆了 Kibana 图形界面。已经 SSH 登陆了CentOS 虚拟机。在虚拟机中可以正常登陆 Elasticsearch 集群的私网访问地址。
+: 检查点：已经正常登陆了 Kibana 图形界面。已经 SSH 登陆了CentOS 虚拟机。在虚拟机中可以正常登陆 Elasticsearch 群集的私网访问地址。
 
 
 
@@ -250,11 +250,11 @@ Positive
 
 ### 运行 Heartbeat 服务
 
-SSH 登录 CentOS 虚拟机后，安装 Heartbeat 软件包，Beats 软件包的版本和 ES 集群的版本保持一致，本文所使用的版本都是 `7.10.0` 。
+SSH 登录 CentOS 虚拟机后，安装 Heartbeat 软件包，Beats 软件包的版本和 ES 群集的版本保持一致，本文所使用的版本都是 `7.10.0` 。
 
 
 ```sh
-yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.0/heartbeat-7.10.0-x86_64.rpm
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/elasticstack/7.x/yum/7.10.0/heartbeat-7.10.0-x86_64.rpm
 ```
 
 进入 heartbeat 的配置文件目录中，`cd /etc/heartbeat/`。
@@ -293,8 +293,8 @@ processors:
 
 参数配置简要介绍：
 * 每 5 秒钟检查 `monitors.d` 目录中是否有服务探针配置文件更新
-* 默认启动一个名为 my-monitor 的 http 探针，检查当前 ES 集群的 Kibana 服务的状态 （通过 Kibana 的公网地址探测）
-* 将服务健康检查的数据输出到一个 Elasticsearch 集群服务，这里使用 ES 集群的内网访问地址：https://es-cn-7pp264vmi001cwjvc.kibana.elasticsearch.aliyuncs.com:5601/
+* 默认启动一个名为 my-monitor 的 http 探针，检查当前 ES 群集的 Kibana 服务的状态 （通过 Kibana 的公网地址探测）
+* 将服务健康检查的数据输出到一个 Elasticsearch 群集服务，这里使用 ES 群集的内网访问地址：https://es-cn-7pp264vmi001cwjvc.kibana.elasticsearch.aliyuncs.com:5601/
 * 在 output.elasticsearch 的部分使用 elastic 账号的密码
 * 为本健康检查服务器配置可观测性地域元数据，名称为 China-BJ 的经纬度， 请使用你所创建的 CentOS 虚拟机所在的可用区的地理信息。
 
@@ -355,7 +355,7 @@ Positive
 通过网络安装 Metricbeat 软件包。命令如下：
 
 ```sh
-yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.0/metricbeat-7.10.0-x86_64.rpm
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/elasticstack/7.x/yum/7.10.0/metricbeat-7.10.0-x86_64.rpm
 ```
 
 进入 Metricbeat 的配置文件目录` cd /etc/metricbeat/`，查看 Metricbeat 的配置目录，熟悉目录中的结构和文件。
@@ -376,7 +376,7 @@ metricbeat setup -e   --index-management   --dashboards \
 命令参数解释：
 
 * setup 命令会初始化相关索引和配套的管理策略 ， 这个步骤可能会持续 2~3 分钟。
-* elasticsearch.hosts Elasticsearch 集群的内网服务地址 https://https://es-cn-7pp264vmi001cwjvc-kibana.internal.elasticsearch.aliyuncs.com:5601
+* elasticsearch.hosts Elasticsearch 群集的内网服务地址 https://https://es-cn-7pp264vmi001cwjvc-kibana.internal.elasticsearch.aliyuncs.com:5601
 * elasticsearch.password 账号 elastic 的密码
 * setup.kibana.host 内网 Kibana 的访问地址
 
@@ -451,7 +451,7 @@ monitoring.enabled: true
 
 以上个别参数解释：
 
-* output.elasticsearch 部分配置了，Elasticsearch 集群的内网访问地址，elastic 的账户密码
+* output.elasticsearch 部分配置了，Elasticsearch 群集的内网访问地址，elastic 的账户密码
 * netinfo.enabled: true 收集所有网卡的配置信息
 * service.name 和 service.id 设定运行在本操作系统上的应用系统的名字，用于丰富每一个指标采集点的元数据
 * setup.ilm.check_exists: false 禁用索引 ilm 策略检查，避免无用动作
@@ -560,7 +560,7 @@ Positive
 通过网络安装 Filebeat 软件包。命令如下：
 
 ```
-yum install -y https://mirrors.tencent.com/elasticstack/7.x/yum/7.10.0/filebeat-7.10.0-x86_64.rpm
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/elasticstack/7.x/yum/7.10.0/filebeat-7.10.0-x86_64.rpm
 ```
 
 进入 `cd /etc/filebeat/` 目录，熟悉 Filebeat 配置文件的目录结构和内容。
@@ -580,7 +580,7 @@ filebeat setup -e   --index-management   --dashboards \
 命令参数解释：
 
 * setup 命令会初始化相关索引和配套的管理策略 ， 这个步骤可能会持续 2~3 分钟。
-* elasticsearch.hosts Elasticsearch 集群的内网服务地址
+* elasticsearch.hosts Elasticsearch 群集的内网服务地址
 * elasticsearch.password 账号 elastic 的密码
 * setup.kibana.host 内网 Kibana 的私网访问地址
 
@@ -666,7 +666,7 @@ monitoring.enabled: true
 
 * netinfo.enabled: true 收集所有网卡的配置信息
 * service.name 和 service.id 是运行在本操作系统上的应用系统的名字
-* 以上配置信息中的 `output.elasticsearch` 需要修改为你的 Elasticsearch 集群的 elastic 账号信息。
+* 以上配置信息中的 `output.elasticsearch` 需要修改为你的 Elasticsearch 群集的 elastic 账号信息。
 
 测试配置文件是否语法正确。在提示 `OK` 的情况下，启用并开启 filebeat 的日志采集服务。
 
@@ -760,7 +760,7 @@ Positive
 安装 APM Server 软件。
 
 ```
-yum install -y https://mirrors.cloud.tencent.com/elasticstack/7.x/yum/7.10.0/apm-server-7.10.0-x86_64.rpm
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/elasticstack/7.x/yum/7.10.0/apm-server-7.10.0-x86_64.rpm
 cd /etc/apm-server/
 ```
 
