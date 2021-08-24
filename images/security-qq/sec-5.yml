@@ -1,0 +1,91 @@
+#=== Packetbeat specific options ===
+packetbeat.interfaces.device: any
+#=== Flows ===
+packetbeat.flows:
+  timeout: 30s
+  period: 10s
+#=== Transaction protocols ===
+packetbeat.protocols:
+- type: icmp
+  enabled: true
+- type: dhcpv4
+  ports: [67, 68]
+  send_request: true
+  send_response: true
+- type: dns
+  ports: [53]
+  include_authorities: true
+  include_additionals: true
+  send_request: true
+  send_response: true
+- type: http
+  ports: [80, 8080, 8000, 5000, 8002]
+- type: tls
+  ports:
+    - 443   # HTTPS
+    - 993   # IMAPS
+    - 995   # POP3S
+    - 5223  # XMPP over SSL
+    - 8443
+    - 8883  # Secure MQTT
+    - 9243  # Elasticsearch
+
+tags: ["service-siem", "vagrant-vm"]
+fields:
+  env: workshop
+
+output.elasticsearch:
+  hosts: ["192.168.50.11:9200"]
+  username: elastic
+  password:  security123
+  pipeline:  geoip-info
+
+processors:
+  - add_host_metadata:
+      netinfo.enabled: false
+      geo:
+        location: 35.5528, 116.2360
+        continent_name: Asia
+        country_iso_code: CN
+        region_name: Beijing
+        region_iso_code: CN-BJ
+        city_name: Beijing
+        name: myCyberSecLab
+  - add_locale: ~
+  - detect_mime_type:
+      field: http.request.body.content
+      target: http.request.mime_type
+  - detect_mime_type:
+      field: http.response.body.content
+      target: http.response.mime_type
+  - add_fields:
+      when.network.source.ip: private
+      fields:
+        source.geo.location:
+          lat: 35.5528
+          lon: 116.2360
+        source.geo.continent_name: Asia
+        source.geo.country_iso_code: CN
+        source.geo.region_name: Beijing
+        source.geo.region_iso_code: CN-BJ
+        source.geo.city_name: Beijing
+        source.geo.name: myCyberSecLab
+      target: ''
+  - add_fields:
+      when.network.destination.ip: private
+      fields:
+        destination.geo.location:
+          lat: 35.5528
+          lon: 116.2360
+        destination.geo.continent_name: Asia
+        destination.geo.country_iso_code: CN
+        destination.geo.region_name: Beijing
+        destination.geo.region_iso_code: CN-BJ
+        destination.geo.city_name: Beijing
+        destination.geo.name: myCyberSecLab
+      target: ''
+
+setup.ilm.check_exists: false
+logging.level: error
+queue.spool: ~
+monitoring.enabled: true

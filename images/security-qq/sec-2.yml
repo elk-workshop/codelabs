@@ -1,0 +1,23 @@
+# ---------------------------------- Cluster -----------------------------------
+cluster.name: elk-sec01
+
+# ----------------------------------- Paths ------------------------------------
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+# ---------------------------------- Network -----------------------------------
+network.host: 0.0.0.0
+
+# --------------------------------- Discovery ----------------------------------
+discovery.type: single-node
+
+# ------------------------------- TLS and Cert ---------------------------------
+xpack.security.enabled: true
+
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: elastic-certificates.p12
+
+# ------------------------------- Security ---------------------------------
+xpack.security.authc.api_key.enabled: true

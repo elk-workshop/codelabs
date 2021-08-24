@@ -1,0 +1,10 @@
+server.host: 192.168.50.11
+server.port: 5601
+elasticsearch.hosts: ["http://192.168.50.11:9200"]
+elasticsearch.username: elastic
+elasticsearch.password: security123
+i18n.locale: zh-CN
+xpack.security.enabled: true
+xpack.security.encryptionKey: "fhjskloppd678ehkdfdlliverpoolfcr"
+xpack.encryptedSavedObjects.encryptionKey: "Si0gjCjujZ0LghDiApKJfGhGeVJ8JwxrY1z7rOpBva"
+xpack.fleet.agents.tlsCheckDisabled: true
