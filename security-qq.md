@@ -1,7 +1,7 @@
  
 
 summary: Elastic 安全实战工作坊(中等)
-id: elastic-security-foundation
+id: elastic-security-qq
 categories: elasticsearch, beats, kibana, security
 tags: elasticstack
 status: Published 
