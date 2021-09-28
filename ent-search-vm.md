@@ -419,7 +419,7 @@ Duration: 35
 
 下面通过网页上传 JSON 文件的方式，给这个搜索引擎中初始化数据。
 
-JASON文件的下载地址：
+JASON文件的下载地址：https://elastic.martinliu.cn/media/video-games.json
 
 ![2021-09-24_16-40-56](images/ent-search/2021-09-24_16-40-56.jpg)
 
