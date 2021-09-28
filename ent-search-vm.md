@@ -54,7 +54,6 @@ App Search 系统架构图如下：
 上图中的 App Search 服务器目前和 Workspace Search 等功能一起整合到了统一的 Enterprise Search 服务器中，安装了 Enterprise Server 就得到了所有企业搜索解决方案的各种功能。
 
 ## 系统准备
-
 Duration: 15
 
 
@@ -242,7 +241,6 @@ Negative
 
 
 ## 安装 Enterprise Search 服务器
-
 Duration: 25
 
 
@@ -396,7 +394,6 @@ Negative
 
 
 ## App Search 实战
-
 Duration: 35
 
 它的特点是帮助开发者随心所欲的为已有的或者正在开发的项目增加功能强大的搜索功能，而且将搜索功能的实施成本降低到无痛点的程度。App Search 可以覆盖的使用场景如下：
@@ -570,7 +567,6 @@ Negative
 
 
 ## 总结
-
 Duration: 15
 
 
