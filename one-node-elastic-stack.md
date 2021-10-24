@@ -58,7 +58,7 @@ Duration: 2
 Positive
 : 建议使用配置足够的笔记本电脑，在本机的命令行直接运行本 Lab 的相关操作，已获取最佳体验。或者使用一个本地运行的虚拟机，效果更佳。
 
-### 笔记本电脑或者虚拟机硬件配置
+### 笔记本电脑
 
 * 8GB 内存或更多
 * i5 及更高 CPU
@@ -72,16 +72,28 @@ Positive
 * 虚拟机运行软件 Virutalbox 或者 VMWare Workstation。
 * 创建一个 Linux 虚拟机，内存不小于 4GB，确保虚拟机关闭防火墙软件，所有端口都可以和本机正常通讯。
 
-Negative
-: 打开命令行工具软件，进入一个准备好的空目录。或者SSH登陆准备好的虚拟机。
+### 虚拟机
 
-## 运行 Elasticsearch 服务器
+本实战练习需要一台 CentOS 虚拟机，配置需求如下：
+
+* 版本： CentOS 7 或者 8
+* CPU： 2 vCPU
+* 内存：最低 4GB， 最好 8 GB
+* 磁盘：最低20 GB
+* 网络：
+  * 本地虚拟机：可以被笔记本电脑访问，同时虚拟机也可以访问互联网下载和安装Yum源中的软件
+  * 云主机：可以从YUM下载安装包，具备公网IP地址，防火墙设置公网可以访问这些端口：TCP9200， TCP5601
+
+
+
+Negative
+: 打开命令行工具软件，使用SSH登陆准备好的CentOS虚拟机。
+
+## 安装 Elasticsearch 服务器
 Duration: 5
 
 Positive
 : 远程下载安装 Elasticsearch 服务器软件。
-
-
 
 使用清华大学的YUM镜像源安装。
 
@@ -186,8 +198,6 @@ ssh 等了到Linux操作系统，在一个新的命令行窗口中用 `curl` 命
 
 `curl --user elastic:security123 -X GET http://localhost:9200`
 
-
-
 ```bash
 {
   "name" : "node1",
@@ -216,7 +226,6 @@ ssh 等了到Linux操作系统，在一个新的命令行窗口中用 `curl` 命
 应该看到类似于下面的输出。
 
 ```bash
-
 ip        heap.percent ram.percent cpu load_1m load_5m load_15m node.role master name
 127.0.0.1           17          97   7    2.05                  dilmrt    *      node1
 ```
@@ -234,11 +243,11 @@ ip        heap.percent ram.percent cpu load_1m load_5m load_15m node.role master
 Negative
 : 注意：请确保将 Elasticsearch 服务运行正常，可以在网页浏览器中登录/验证 elastic 用户的密码 security123。
 
-## 索引一些文档「可选实践lab」
+## 索引一些文档「可选实践」
 Duration: 8
 
 Positive
-: 这个本地运行的 Elasticsearch 集群提供着功能完整的 RESTFul API 服务，包括对文档的增删改查（CURD）等操作。
+: 【这一部分练习可以略过】这个本地运行的 Elasticsearch 集群提供着功能完整的 RESTFul API 服务，包括对文档的增删改查（CURD）等操作。
 
 ### 索引单个和返回单个文档
 
@@ -344,11 +353,11 @@ yellow open   customer D9ijmP_iR225damqVPQwkw   1   1          1            0   
 Negative
 : `_doc` 和 `_bulk` API 索引了单个和批量的数据文档。名为 `bank` 和 `customer` 的索引也在过程中被创建。
 
-## 测试搜索功能「可选实践lab」
+## 测试搜索功能「可选实践」
 Duration: 6
 
 Positive
-: 使用 _search API 进行搜索，Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) 有一整套的搜索能力。
+: 【这一部分练习可以略过】使用 _search API 进行搜索，Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) 有一整套的搜索能力。
 
 
 ### 搜索 1 
@@ -532,11 +541,11 @@ curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H '
 Negative
 : 通过 `_search` API 成功的完成了 5 个目的不同的搜索操作，体会 Elasticsearch 的搜索能力。
 
-## 搜索结果的聚合分析「可选实践lab」
+## 搜索结果的聚合分析「可选实践」
 Duration: 6
 
 Positive
-: Elasticsearch 可以在搜索结果中进行聚合分析  [Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html) ，通过各种结构汇计算总搜索结果数据。
+: 【这一部分练习可以略过】Elasticsearch 可以在搜索结果中进行聚合分析  [Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html) ，通过各种结构汇计算总搜索结果数据。
 
 
 ### 聚合运算 1
@@ -663,8 +672,6 @@ Negative
 ## 运行和使用 Kibana 服务器
 Duration: 8
 
-
-
 执行 Kibana 安装命令，如下所示：
 
 ```shell
@@ -731,11 +738,9 @@ Negative
 
 点击 Dashboard 查看数据分析仪表板。
 
+### 创建 bank 索引模式&查看数据【可选实践】
 
-
-### 创建 bank 索引模式&查看数据
-
-为了在图形界面中创建用于分析 bank 索引中所有数据的"索引模式"。
+【这一部分练习可以略过】 为了在图形界面中创建用于分析 bank 索引中所有数据的"索引模式"。
 
 ![2020-10-28_23-45-56](images/2020-10-28_23-45-56.jpeg)
 
