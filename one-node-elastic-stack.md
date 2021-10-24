@@ -25,12 +25,10 @@ Duration: 1
 
 本课程的所有程序文件、软件包的下载地址如下：
 
-* 百度网盘 https://pan.baidu.com/s/1fqLLEanfkmLYBZJBrKhiYQ 
-* 提取码：0kx6
-
-请在网盘文件加中，找到对应课程的目录【名为：workshop只需要下载本文件夹】，下载该目录中的两个文件到本机（macOS），或者上传到云主机中。
-
-已经下载并且准备好的情况下，忽略本课程中提到的任何下载命令。
+* 国内的YUM源服务器1：https://mirror.tuna.tsinghua.edu.cn/elasticstack/
+* 国内的YUM源服务器2：https://mirrors.cloud.tencent.com/elasticstack/
+* 国内的YUM源服务器3：https://mirrors.aliyun.com/elasticstack/
+* Elastic 标准YUM源：https://artifacts.elastic.co/downloads/elasticsearch/
 
 
 ### 参考信息
@@ -60,7 +58,7 @@ Duration: 2
 Positive
 : 建议使用配置足够的笔记本电脑，在本机的命令行直接运行本 Lab 的相关操作，已获取最佳体验。或者使用一个本地运行的虚拟机，效果更佳。
 
-### 笔记本电脑硬件配置
+### 笔记本电脑或者虚拟机硬件配置
 
 * 8GB 内存或更多
 * i5 及更高 CPU
@@ -81,90 +79,116 @@ Negative
 Duration: 5
 
 Positive
-: 在实操练习的空目录中下载 Elasticsearch 服务器软件压缩包 tar.gz 版本（非 rpm 或 deb 安装包）。
+: 远程下载安装 Elasticsearch 服务器软件。
 
-### 下载软件压缩包
 
-下载符合你的操作系统类型的 Elasticsearch 软件包。
 
-Linux:  [elasticsearch-7.9.3-linux-x86_64.tar.gz](https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-linux-x86_64.tar.gz)
+使用清华大学的YUM镜像源安装。
 
-```bash
-curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-linux-x86_64.tar.gz
+```shell
+sudo yum install -y https://mirror.tuna.tsinghua.edu.cn/elasticstack/yum/elastic-7.x/7.15.1/elasticsearch-7.15.1-x86_64.rpm
 ```
 
-macOS:  [elasticsearch-7.9.3-darwin-x86_64.tar.gz](https://artifacts.elastic.co/downloads/elasticsearch/
-elasticsearch-7.9.3-darwin-x86_64.tar.gz)
+在启动 Elasticsearch 服务之前，创建启用安全选项所需的 TLS 数字证书，运行证书创建工具如下所示：
 
-```bash
-curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-darwin-x86_64.tar.gz
+```shell
+sudo /usr/share/elasticsearch/bin/elasticsearch-certutil cert -out /etc/elasticsearch/elastic-certificates.p12 -pass ""
+sudo chmod 660 /etc/elasticsearch/elastic-certificates.p12
+sudo ls -l /etc/elasticsearch/elastic-certificates.p12
 ```
 
-Windows: 
+将 Elasticsearch 默认的配置文件内容更新为如下内容。
 
+```yaml
+# ---------------------------------- Cluster -----------------------------------
+cluster.name: elk-es01
 
-<button>
-  [elasticsearch-7.9.3-windows-x86_64.zip](https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-windows-x86_64.zip)
-</button>
+# ----------------------------------- Paths ------------------------------------
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
 
-### 解压缩软件压缩包
+# ---------------------------------- Network -----------------------------------
+network.host: 0.0.0.0
 
-进入下载软件包所在的目录中。解压缩 Elasticsearch 服务器端软件包。
+# --------------------------------- Discovery ----------------------------------
+discovery.type: single-node
 
-Linux:
+# ------------------------------- TLS and Cert ---------------------------------
+xpack.security.enabled: true
 
-```bash
-tar -xvf elasticsearch-7.9.3-linux-x86_64.tar.gz
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: elastic-certificates.p12
+
+# ------------------------------- Security ---------------------------------
+xpack.security.authc.api_key.enabled: true
+xpack:
+  security:
+    authc:
+      realms:
+        native:
+          native1:
+            order: 0
+
+#  ------------------------------- App Search ---------------------------------
+action.auto_create_index: ".app-search-*-logs-*,-.app-search-*,+*"
 ```
 
-macOS:
+用以上配置内容，创建名为 'sec.yml' 的配置文件，替换默认 'elasticsearch.yml' 配置文件的内容（下面用 cp 命令覆盖默认配置文件的方式更新默认配置文件，后续的所有配置更新都会使用这个方式）。然后启动 Elasticsearch 服务。
 
-```bash
-tar -xvf elasticsearch-7.9.3-darwin-x86_64.tar.gz
-```
-Windows PowerShell:
-
-```bash
-Expand-Archive elasticsearch-7.9.3-windows-x86_64.zip
-```
-
-
-
-### 启动 Elasticsearch 服务
-
-进入加压缩后的目录，并在命令行启动 Elasticsearch 服务器。
-
-Linux 和 macOS:
-
-
-```bash
-cd elasticsearch-7.9.3/bin
-./elasticsearch -Ecluster.name=1m-only -Ediscovery.type=single-node -Enode.name=node1 -Enetwork.host=0.0.0.0
+```sh
+sudo cp sec.yml /etc/elasticsearch/elasticsearch.yml
+sudo systemctl daemon-reload
+sudo systemctl enable elasticsearch.service
+sudo systemctl start elasticsearch.service
+sudo systemctl status elasticsearch
 ```
 
-Windows:
+使用 `sudo tail -f /var/log/elasticsearch/elk-es01.log ` 命令查看当前 Elasticsearch 服务的日志。
 
+初始化 ES 服务器内建用户的密码。
 
-```bash
-cd elasticsearch-7.9.3\bin
-.\elasticsearch.bat -E cluster.name=1m-only -E discovery.type=single-node -E node.name=node1
+```shell
+sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive -b
 ```
 
-在启动日志停止滚动后，一个名为 `1m-only` 的单节点 Elasticsearch 集群就启动成功了。启动是参数说明如下：
+将本练习所使用的默认密码  `security123` 复制到剪切板，这条命令的每一个提示符出现的位置，用快捷键粘贴输入这个密码之后，按回车输入该密码，用这个方式给所有系统内置账号设置了相同的密码（纯粹测试目的，并不建议这么做）。以上命令的输出如下：
 
-* cluster.name ： 集群名称
-* node.name : 节点名称
-* discovery.type ：集群中节点间的发现方式，显式声明该集群中只有一个节点。
+```shell
+Enter password for [elastic]:
+Reenter password for [elastic]:
+Enter password for [apm_system]:
+Reenter password for [apm_system]:
+Enter password for [kibana_system]:
+Reenter password for [kibana_system]:
+Enter password for [logstash_system]:
+Reenter password for [logstash_system]:
+Enter password for [beats_system]:
+Reenter password for [beats_system]:
+Enter password for [remote_monitoring_user]:
+Reenter password for [remote_monitoring_user]:
+Changed password for user [apm_system]
+Changed password for user [kibana_system]
+Changed password for user [kibana]
+Changed password for user [logstash_system]
+Changed password for user [beats_system]
+Changed password for user [remote_monitoring_user]
+Changed password for user [elastic]
+```
+
+在浏览器中访问 http://IP-address:9200/ ，测试 Elasticsearch 服务是否正常，确认上面配置的 elastic 用户的密码 `security123` 登录。
 
 
-在一个新的命令行窗口中用 `curl` 命令行工具测试 Elasticsearch 集群服务的状态。
+ssh 等了到Linux操作系统，在一个新的命令行窗口中用 `curl` 命令行工具测试 Elasticsearch 集群服务的状态。
 
-查看服务的基本信息。Linux (SSH 登陆之后)和 macOS: 
+使用下面的命令查看Elasticsearch服务的基本信息。
 
-`curl -X GET http://localhost:9200`
+`curl --user elastic:security123 -X GET http://localhost:9200`
+
+
 
 ```bash
-curl -X GET http://localhost:9200
 {
   "name" : "node1",
   "cluster_name" : "1m-only",
@@ -187,10 +211,12 @@ curl -X GET http://localhost:9200
 
 查看集群的状态信息。Linux (SSH 登陆之后) 和 macOS:
 
-`curl -X GET http://localhost:9200/_cat/nodes\?v`
+`curl --user elastic:security123 -X GET http://localhost:9200/_cat/nodes\?v`
+
+应该看到类似于下面的输出。
 
 ```bash
-curl -X GET http://localhost:9200/_cat/nodes\?v
+
 ip        heap.percent ram.percent cpu load_1m load_5m load_15m node.role master name
 127.0.0.1           17          97   7    2.05                  dilmrt    *      node1
 ```
@@ -198,17 +224,17 @@ ip        heap.percent ram.percent cpu load_1m load_5m load_15m node.role master
 上面的 `master` 那一列下面的值为 `*` 号，表明节点 `node1` 是主节点。
 
 
-在浏览器中验证 Elasticsearch 集群服务的状态，打开浏览器中访问这个网址 `http://localhost:9200` 。或者访问本地虚拟机的 IP 地址，例如：`http://192.168.50.11:9200` ，访问结果应如下图所示：
+在浏览器中验证 Elasticsearch 集群服务的状态，打开浏览器中访问这个网址 `http://IP_ADDRESS:9200` 。或者访问本地虚拟机的 IP 地址，或者云主机的公网IP地址，例如：`http://192.168.50.11:9200` ，访问结果应如下图所示：
 
 ![2020-10-28_11-35-01](images/2020-10-28_11-35-01.jpeg)
 
 
-然后尝试访问这个网址 `http://localhost:9200/_cat/nodes\?v` 。
+然后尝试访问这个网址 `http://IP_address:9200/_cat/nodes\?v` 。
 
 Negative
-: 确保在命令行和浏览器中都能看到正确的集群名称、节点名称和软件版本号；Elasticsearch 服务器已经正常工作。
+: 注意：请确保将 Elasticsearch 服务运行正常，可以在网页浏览器中登录/验证 elastic 用户的密码 security123。
 
-## 索引一些文档
+## 索引一些文档「可选实践lab」
 Duration: 8
 
 Positive
@@ -219,7 +245,7 @@ Positive
 索引一个文档，该文档只具有一个键值对数据 "name": "John Doe" 。
 
 ```bash
-curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+curl --user elastic:security123 -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
 {
   "name": "John Doe"
 }
@@ -252,8 +278,8 @@ curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: applicatio
 
 用下面的命令取回这个编号为 `1` 的文档。
 
-```
-curl -X GET "localhost:9200/customer/_doc/1?pretty"
+```sh
+curl --user elastic:security123  -X GET "localhost:9200/customer/_doc/1?pretty"
 
 ```
 
@@ -282,19 +308,23 @@ curl -X GET "localhost:9200/customer/_doc/1?pretty"
 
 确认软件包目录下有一个名为 `account.json` 的文件。否则根据下面的提示下载该文件。
 
-下载测试数据文件 [accounts.json](https://github.com/elastic/elasticsearch/blob/master/docs/src/test/resources/accounts.json?raw=true) ，这个文件中有一千条人工生成的数据
+下载测试数据文件 [accounts.json](https://github.com/elastic/elasticsearch/blob/master/docs/src/test/resources/accounts.json?raw=true) ，这个文件中有一千条人工生成的数据。
 
 <button>
 [点此下载 account.json 文件](https://github.com/elastic/elasticsearch/blob/master/docs/src/test/resources/accounts.json?raw=true)
 </button>
 
+或者在Linux 的操作系统中使用命令下载该文件。
+
+curl -O https://github.com/elastic/elasticsearch/blob/master/docs/src/test/resources/accounts.json
+
 将 `account.json` 文件下载到测试目录中，用文本编辑器打开浏览确认，或者在 Linux 系统中执行命令 ` cat account.json`。这个文件中有一千条数据记录。
 
 在命令行中，进入以上测试数据文件的目录中，运行下面的两条命令。
 
-```
-curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_bulk?pretty&refresh" --data-binary "@accounts.json"
-curl "localhost:9200/_cat/indices?v"
+```sh
+curl --user elastic:security123 -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_bulk?pretty&refresh" --data-binary "@accounts.json"
+curl --user elastic:security123 "localhost:9200/_cat/indices?v"
 ```
 
 以上命令的结果，最后三行应该如下所示：
@@ -307,15 +337,14 @@ yellow open   customer D9ijmP_iR225damqVPQwkw   1   1          1            0   
 
 上面的结果表明：当前的集群中已经创建了两个索引 `bank` 和 `customer` ; 名为 `bank` 的索引显示文档数为 1000，这就是刚才用 bulk API 导入的数据。
 
-如果在浏览器中访问这个网址 localhost:9200/_cat/indices?v 也可以看到如下相同结果。
+如果在浏览器中访问这个网址 http://IP_ADDRESS:9200/_cat/indices?v 也可以看到如下相同结果。
 
 ![2020-10-28_12-58-30](images/2020-10-28_12-58-30.jpeg)
-
 
 Negative
 : `_doc` 和 `_bulk` API 索引了单个和批量的数据文档。名为 `bank` 和 `customer` 的索引也在过程中被创建。
 
-## 测试搜索功能
+## 测试搜索功能「可选实践lab」
 Duration: 6
 
 Positive
@@ -332,8 +361,8 @@ Positive
 
 在命令行执行下面的命令。
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": { "match_all": {} },
   "sort": [
@@ -371,8 +400,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 
 在命令行执行下面的命令。
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": { "match_all": {} },
   "sort": [
@@ -404,8 +433,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 
 在命令行执行下面的命令。
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": { "match": { "address": "mill lane" } }
 }
@@ -435,8 +464,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 
 在命令行执行下面的命令。
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123  -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "bool": {
@@ -474,8 +503,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 在命令行执行下面的命令。
 
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "bool": {
@@ -503,7 +532,7 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 Negative
 : 通过 `_search` API 成功的完成了 5 个目的不同的搜索操作，体会 Elasticsearch 的搜索能力。
 
-## 搜索结果的聚合分析
+## 搜索结果的聚合分析「可选实践lab」
 Duration: 6
 
 Positive
@@ -522,8 +551,8 @@ Positive
 在命令行执行下面的命令。
 
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 0,
   "aggs": {
@@ -558,8 +587,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 在命令行执行下面的命令。
 
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 0,
   "aggs": {
@@ -597,8 +626,8 @@ curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/j
 在命令行执行下面的命令。
 
 
-```
-curl -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+```sh
+curl --user elastic:security123 -X GET "localhost:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 0,
   "aggs": {
@@ -635,60 +664,68 @@ Negative
 Duration: 8
 
 
-Positive
-: 下载并运行 Kibana 软件包，使用 Kibana 的图形界面搜索 bank 索引中的数据。
 
-### 下载后运行 Kibana
+执行 Kibana 安装命令，如下所示：
 
-已经在本机下载好所有软件包文件的，请忽略 curl 下载命令，直接执行解压缩和。
-
-在 Linux 上运行下面的命令。
-
-
-```
-curl -O https://artifacts.elastic.co/downloads/kibana/kibana-7.9.3-linux-x86_64.tar.gz
-curl https://artifacts.elastic.co/downloads/kibana/kibana-7.9.3-linux-x86_64.tar.gz.sha512 | shasum -a 512 -c - 
-tar -xzf kibana-7.9.3-linux-x86_64.tar.gz
-cd kibana-7.9.3-linux-x86_64/
-bin/kibana  --server.host=0.0.0.0
+```shell
+sudo yum install -y https://mirror.tuna.tsinghua.edu.cn/elasticstack/yum/elastic-7.x/7.15.0/kibana-7.15.0-x86_64.rpm
 ```
 
-或者 macOS 上运行下面的命令。
+准备预配置的 Kibana 的配置文件，如下：
 
+```yaml
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://localhost:9200"]
+elasticsearch.username: "kibana_system"
+elasticsearch.password: security123
+enterpriseSearch.host: 'http://localhost:3002'
+i18n.locale: zh-CN
+xpack.security.enabled: true
+xpack.security.encryptionKey: "fhjskloppd678ehkdfdlliverpoolfcr"
+xpack.encryptedSavedObjects.encryptionKey: "Si0gjCjujZ0LghDiApKJfGhGeVJ8JwxrY1z7rOpBva"
 ```
-curl -O https://artifacts.elastic.co/downloads/kibana/kibana-7.9.3-darwin-x86_64.tar.gz
-curl https://artifacts.elastic.co/downloads/kibana/kibana-7.9.3-darwin-x86_64.tar.gz.sha512 | shasum -a 512 -c - 
-tar -xzf kibana-7.9.3-darwin-x86_64.tar.gz
-cd kibana-7.9.3-darwin-x86_64/
+
+上见示例配置文件 kb.yml。如果你使用的其它自定义的 IP 地址，请注意在后续的所有操作中替换它。
+
+更新默认配置文件，用以上示例配置文件覆盖 Kibana 默认配置文件，然后启动 Kibana 服务。
+
+```shell
+cp /etc/kibana/kibana.yml /etc/kibana/kibana.yml.bk
+cp kb.yml /etc/kibana/kibana.yml 
+systemctl start  kibana.service 
+systemctl status   kibana.service
 ```
 
-或者 Windows 上操作如下。
+查看 Kibana 服务的日志是否正常。
 
-下载 zip 压缩包。
-
-<button>
-  [点此下载 kibana-7.9.3-windows-x86_64.zip ](https://artifacts.elastic.co/downloads/kibana/kibana-7.9.3-windows-x86_64.zip)
-</button>
-
-解压后进入 Kibana 运行目录，从命令行启动 Kibana 服务器。
-
+```shell
+sudo tail -f /var/log/messages
 ```
-CD c:\kibana-7.9.3-windows-x86_64
-.\bin\kibana.bat
-```
+
+在浏览器里测试登录 Kibana 的IP地址  http://192.168.50.11:5601 ，使用 elastic 用户名和密码 security123。点击主页上的“安全”的链接，你应该看到如下的界面。
+
+![2021-03-25_15-07-47](images/ent-search/2021-09-24_15-27-37.jpg)
+
+### 启用企业版许可 30 天试用
+
+点击 Kibana 左上角菜单中点击 “Stack Management” --> “许可管理”，点击 “开始试用” 按钮，启用 30 天的高级功能的试用期。
+
+Negative
+: 注意：至此完成了 Elastic Stack 的基础准备工作，Elasticsearch + Kibana 的服务都处于正常运行状态，启用了企业版功能的试用。
+
+
 
 ### 登录 Kibana 控制台导入&查看示例数据
 
 到目前为止，Elasticsearch 集群运行在无密码的开发模式，因此无需输入用户名和密码。
 
-打开浏览器访问网址 `localhost:5601` 或者虚拟机的 IP 地址，例如  `192.168.50.11:5601`
-![2020-10-28_23-42-23](images/2020-10-28_23-42-23.jpeg)
+打开浏览器访问网址 `localhost:5601` 或者虚拟机的 IP 地址，例如  `192.168.50.11:5601`； 登陆后点击“添加数据”按钮。然后点击页面中的“样例数据”标签页，进入样例数据导入界面。
 
-在进入 Kibana 图形界面后，点击 `Load a data set and a Kibana dashboard` 链接。
+
 
 ![2020-10-28_23-43-26](images/2020-10-28_23-43-26.jpeg)
 
-分别点击这三个按钮，导入三组示例数据。
+分别点击这三个按钮「添加数据」，导入三组示例数据。
 
 ![2020-10-28_23-44-23](images/2020-10-28_23-44-23.jpeg)
 
@@ -706,7 +743,7 @@ CD c:\kibana-7.9.3-windows-x86_64
 
 ![2020-10-28_23-46-21](images/2020-10-28_23-46-21.jpeg)
 
-在 Kibana 管理选项中，点击创建索引模式按钮。
+在 Kibana 管理选项中，点击创建【索引模式】按钮。
 
 ![2020-10-28_23-48-38](images/2020-10-28_23-48-38.jpeg)
 

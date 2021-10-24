@@ -14,15 +14,11 @@ Analytics Account: UA-159133967-1
 ## 概述 
 Duration: 5
 
-
-
 Elastic 企业搜索解决方案由三个部分组成：
 
 * Workplace Search ：通过整合您的所有内容平台（Google 云端硬盘、Slack、Box、Salesforce 等等），打造个性化的搜索体验，提高团队的工作效率。Elastic Workplace Search 可以灵活轻松地进行部署（既可在 Elastic Cloud 上部署，亦可免费下载进行自管型部署），不仅对相关性预先进行了调优，而且界面直观，能够帮助您和您的队友快速返岗工作。
 * 通过精心打造的 Elastic App Search 体验，您能够在精致的 API 集合以及直观的仪表板中感受 Elasticsearch 的强大功能。利用无缝可扩展性，可以调整相关性，提供详尽的文档，拥有经过良好维护的客户端，还具备强大的分析能力，通过这些优点，您能够轻松打造领先的搜索体验。
 * Site Search：Elastic Site Search（之前的 Swiftype Site Search）能够为您提供构建强大的网站搜索功能所需的工具，而且您轻轻松松即可学会。免维护爬虫能够确保网站内容保持最新状态，同时直观的定制功能和强大的分析能力可以让您充分掌控相关度。所有这些，都支持大规模扩展，且由 Elasticsearch 提供支持。
-
-
 
 ### Gartner 洞见引擎魔力象限
 
@@ -30,22 +26,16 @@ Elastic 在 2021 年度《Gartner 洞见引擎魔力象限》中被定位为挑�
 
 ![gartner-grid-gartner-mq-insight-engines-2021](images/ent-search/gartner-grid-gartner-mq-insight-engines-2021.jpg)
 
-
-
 ### 解决方案架构
 
 这是一款基于 Elastic Stack 的解决方案，它的核心搜索技术是 Elasticsearch；因此，用户可以高速的、可扩展的处理大量数据，并且获得想要的搜索结果。
 
 ![2021-04-21_12-44-06](images/ent-search/2021-04-21_12-44-06.jpg)
 
-
-
 本课程所使用到的 Elastic Stack 的组件包括：
 
 * Elasticsearch、Kibana 的版本是 7.15. 0
 * Elastic Enterprise Search 7.15.0
-
-
 
 App Search 系统架构图如下：
 
@@ -55,8 +45,6 @@ App Search 系统架构图如下：
 
 ## 系统准备
 Duration: 15
-
-
 
 本培训的所有操作和配置都从在一个虚拟机上完成。需要启动一个 CentOS 8 Linux 虚拟机，需求如下：
 
@@ -73,17 +61,13 @@ Elastic Stack 软件安装包清单：
 * kibana-7.15.0-x86_64.rpm
 * enterprise-search-7.15.0.rpm
 
-
-
 安装 Enterprise Search 所需要的 JDK，SSh 等了 CentOS 虚拟机后，运行下面的命令。
 
 ```sh
 yum install -y java-11-openjdk.x86_64
 ```
 
-
-
-###安装配置 Elasticsearch
+### 安装配置 Elasticsearch
 
 使用清华大学的YUM镜像源安装。
 
@@ -227,23 +211,15 @@ sudo tail -f /var/log/messages
 
 ![2021-03-25_15-07-47](images/ent-search/2021-09-24_15-27-37.jpg)
 
-
-
-###启用企业版许可 30 天试用
+### 启用企业版许可 30 天试用
 
 点击 Kibana 左上角菜单中点击 “Stack Management” --> “许可管理”，点击 “开始试用” 按钮，启用 30 天的高级功能的试用期。
-
-
 
 Negative
 : 注意：至此完成了 Elastic Stack 的基础准备工作，Elasticsearch + Kibana 的服务都处于正常运行状态，启用了企业版功能的试用。
 
-
-
 ## 安装 Enterprise Search 服务器
 Duration: 25
-
-
 
 登陆 CentOS 虚拟机，用 Yum 命令安装。
 
@@ -281,8 +257,6 @@ ENT_SEARCH_DEFAULT_PASSWORD=search4you /usr/share/enterprise-search/bin/enterpri
 ```
 
 首次启动服务器会自动生成一个密钥，并停止服务启动过程，如下所示：
-
-
 
 ```sh
 [root@VM-0-36-centos ~]# ENT_SEARCH_DEFAULT_PASSWORD=search4you /usr/share/enterprise-search/bin/enterprise-search
@@ -386,12 +360,8 @@ Creating Filebeat log directory: /usr/share/enterprise-search/log
 * Kibana 服务器测安装配置
 * Enterprise Search服务器的安装配置，实现了使用 Elasticsearch的内置用户认证登陆 Enterprise Serach服务器的应用。
 
-
-
 Negative
 : 注意：完成了在单机上所有基础环境的配置和搭建，完成了基础的配置准备工作。
-
-
 
 ## App Search 实战
 Duration: 35
@@ -405,8 +375,6 @@ Duration: 35
 - 公司官网
 - 内部的搜索
 - 还有更多其他
-
-
 
 ### 创建名为 GAMES 的搜索引擎
 
@@ -444,8 +412,6 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 3. 修改 critic_score 的字段类型为 number
 4. 点击 ‘创建架构字段’ 按钮，增加一个名为 language 的 text 类型的字段。
 
-
-
 ### 按需调教搜索引擎
 
 #### 创建同义词
@@ -466,14 +432,10 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 
 做如下两个调整：
 
-
-
 1. 在预览查询的搜索框中输入 pokemon 
 2. 为 globa_sales 增加 Functional Boost 1。
 3. 为 Name 增加 weight 3。
 4. 在这个调整过程中，观察右侧的搜结果的动态变化，还可以做其他字段的修改，直到搜素结果满意为止。
-
-
 
 ![2021-09-24_17-04-07](images/ent-search/2021-09-24_17-04-07.jpg)
 
@@ -481,8 +443,6 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 
 1. 点击左侧 ‘相关性调整’
 2. 点击该字段右上角的数字0的按钮， 在菜单中选择 ‘ 函数’
-
-
 
 ![2021-09-24_17-06-29](images/ent-search/2021-09-24_17-06-29.jpg)
 
@@ -493,27 +453,19 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 3. 在这个过程中，观察右侧搜索结果清单中每一个数据右上角的 score 数据的变化。
 4. 最后点击右上角的 ‘ 保存’ 按钮
 
-
-
 #### 创建 ‘策展‘
 
 故意将某条搜索结果置顶，这有可能因为，这款游戏目前是热评游戏，是畅销爆款，是高利率商品，是广告商品，或者其他业务原因。可以给某个关键字的搜索结果中，置顶一条或者多条搜索结果。下面将 pokemon 的 pokemon-ranger-ds-2006 这款产品置顶。点击右上角的测试查看器测试一下置顶前后的差异。
-
-
 
 ![2021-09-24_17-40-50](images/ent-search/2021-09-24_17-40-50.jpg)
 
 1. 点击左侧菜单 ‘策展’
 2. 点击 ‘创建策展’ 按钮
 
-
-
 ![2021-09-24_17-41-27](images/ent-search/2021-09-24_17-41-27.jpg)
 
 1. 输入目标关键字 pokemon
 2. 点击 ‘继续’ 按钮
-
-
 
 ![2021-09-24_17-41-56](images/ent-search/2021-09-24_17-41-56.jpg)
 
@@ -524,10 +476,6 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 
 1. 返回搜索结果清单
 2. 点击右上角的 ‘ 查询测试器’，搜索 pokemon ，观察结果清单，确认首条搜索结果是什么。
-
-
-
-
 
 Negative
 : 注意： 这里我们完成了首个搜索引擎的数据初始化、字段类型调整、同义词字典、搜索字段权重和置顶策略展示的设置，基本上搜索功能可以达到我们的需求。
@@ -554,8 +502,6 @@ Negative
 3. 确认首条搜索结果的ID 
 4. 点击右上角的下载按钮，获得这个界面的源码
 
-
-
 下载到的这个 zip 文件是一个半成品，简单的使用说明如下：
 
 1. 解压后，进入解压后的目录。
@@ -564,16 +510,10 @@ Negative
 4. 最后运行 npm run build 命令，构建出可以发布给用户使用的版本，在build 目录中查看，构建结果
 5. build 目录中的文件部署到一个web 服务器上，测试最终的使用效果。
 
-
-
 ## 总结
 Duration: 15
 
-
-
 使用 App Search 搜索平台，开发者可以快速的开发出一套定制化的搜索系统，轻松的实现后台搜索业务逻辑的调整，并轻松的将用户搜索界面测试后部署上线。
-
-
 
 推荐阅读文档：
 
@@ -581,10 +521,12 @@ Duration: 15
 * https://www.elastic.co/guide/en/enterprise-search/7.14/index.html
 * https://www.elastic.co/guide/en/app-search/current/index.html
 
-
-
 推荐扩展实操练习：
 
 1. 创建一个网页爬虫的搜索引擎，抓取自己的blog，或者抓取公司内部网站，测试和发布这个搜索UI
+<<<<<<< HEAD
 2. 创建 Workspace Search ，在 Workspace 中增加 GitHub 和 Jira 作为搜索源，[参考文档](https://martinliu.cn/blog/getting-start-elastic-workplace-search/)
 
+=======
+2. 创建 Workspace Search ，在 Workspace 中增加 GitHab 和 Jira 作为搜索源，[参考文档](https://martinliu.cn/blog/getting-start-elastic-workplace-search/)
+>>>>>>> main
