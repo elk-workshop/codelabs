@@ -524,9 +524,4 @@ Duration: 15
 推荐扩展实操练习：
 
 1. 创建一个网页爬虫的搜索引擎，抓取自己的blog，或者抓取公司内部网站，测试和发布这个搜索UI
-<<<<<<< HEAD
 2. 创建 Workspace Search ，在 Workspace 中增加 GitHub 和 Jira 作为搜索源，[参考文档](https://martinliu.cn/blog/getting-start-elastic-workplace-search/)
-
-=======
-2. 创建 Workspace Search ，在 Workspace 中增加 GitHab 和 Jira 作为搜索源，[参考文档](https://martinliu.cn/blog/getting-start-elastic-workplace-search/)
->>>>>>> main

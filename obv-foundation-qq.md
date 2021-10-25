@@ -80,6 +80,8 @@ Duration: 10
 * 可以通过浏览器正常登录使用 Kibana 服务。
 * 可以用 SSH 客户的正常访问以上 CentOS 虚拟机。
 
+
+
 CentOS 虚拟机开放如下入栈端口：
 
 * TCP 8200  0.0.0.0/0
@@ -93,7 +95,7 @@ CentOS 虚拟机开放如下入栈端口：
 
 登录腾讯云控制台，搜索 Elasticsearch Service 产品，进入该产品控制台，点击 “新建” 集群按钮。
 
-在选择 Elasticsearch 版本的时候请选择最新的版本，本教程尽量和最新的版本保护一致，也适用于相近的旧版本。
+在选择 Elasticsearch 版本的时候请选择"7.10.1"版本，。
 
 ![13981608079985_.pic_hd](images/13981608079985_.pic_hd.jpg)
 
@@ -229,7 +231,7 @@ processors:
 命令如下：
 
 ```shell
-heartbeat test confg
+heartbeat test config
 heartbeat test output
 
 heartbeat setup
