@@ -4,7 +4,7 @@ categories: elasticsearch, beats, kibana, observability
 tags: elasticstack
 status: Published 
 authors: Martin Liu
-Feedback Link: https://martinliu.cn
+Feedback Link: https://github.com/martinliu/martinliu.github.io/discussions
 Analytics Account: UA-159133967-1
 
 
@@ -653,7 +653,6 @@ Positive
 下载名为 [canvas-workpad-petclinic.json](canvas-workpad-petclinic.json) 的示例文件。
 
 在 Kibana 左侧的菜单里选择 `Canvas` 画布菜单，点击 `Import workpad JSON file` 按钮，导入后既可以看到名为 `宠物商店：SLO管理监控大屏` 的监控画布。
-
 
 
 

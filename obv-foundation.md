@@ -4,7 +4,7 @@ categories: elasticsearch, beats, kibana, observability
 tags: elasticstack
 status: Published 
 authors: Martin Liu
-Feedback Link: https://martinliu.cn
+Feedback Link: https://github.com/martinliu/martinliu.github.io/discussions
 Analytics Account: UA-159133967-1
 
 
