@@ -26,7 +26,7 @@ Elastic 在 2021 年度《Gartner 洞见引擎魔力象限》中被定位为挑�
 
 ![gartner-grid-gartner-mq-insight-engines-2021](images/ent-search/gartner-grid-gartner-mq-insight-engines-2021.jpg)
 
-### 解决方案架构
+### 搜索解决方案架构
 
 这是一款基于 Elastic Stack 的解决方案，它的核心搜索技术是 Elasticsearch；因此，用户可以高速的、可扩展的处理大量数据，并且获得想要的搜索结果。
 
@@ -453,7 +453,7 @@ JASON文件的下载地址：[https://elastic.martinliu.cn/media/video-games.jso
 3. 在这个过程中，观察右侧搜索结果清单中每一个数据右上角的 score 数据的变化。
 4. 最后点击右上角的 ‘ 保存’ 按钮
 
-#### 创建 ‘策展‘
+#### 创建 ‘策展‘-基于策略展示
 
 故意将某条搜索结果置顶，这有可能因为，这款游戏目前是热评游戏，是畅销爆款，是高利率商品，是广告商品，或者其他业务原因。可以给某个关键字的搜索结果中，置顶一条或者多条搜索结果。下面将 pokemon 的 pokemon-ranger-ds-2006 这款产品置顶。点击右上角的测试查看器测试一下置顶前后的差异。
 
