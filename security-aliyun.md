@@ -26,7 +26,7 @@ Duration: 5
 
 在本课程中您将会学到：
 
-1. 在阿里云上搭建 Elasticsearch 集群，自己搭建 Kibana 服务服务器。
+1. 在阿里云上搭建 Elasticsearch 集群。
 2. 学习使用 Elastic Stack 进行安全管理的基本概念和方案架构。
 3. 使用 Elastic 提供的 Auditbeat、 Filebeat 和 PacketBeat 摄入数据。
 4. 部署和接入外部开源 IDS 软件 Scatea 的监控数据
@@ -41,9 +41,8 @@ Duration: 5
 
 本课程所使用到的 Elastic Stack 的组件包括：
 
-* Elasticsearch、Kibana、Packetbeat、Filebeat、Auditbeat 版本是 7.10. 1。
-
-* Suricata 版本 5.0.6，开源入侵监测引擎。
+* Elasticsearch、Kibana、Packetbeat、Filebeat、Auditbeat 版本是 7.10.0。
+* Suricata 版本 5.0.2，开源入侵监测引擎。
 
 
 
@@ -92,7 +91,7 @@ Elastic Stack 软件安装包清单：
 
 下面开始创建 Elasticsearch 集群，并初始化相关设置。
 
-###创建一个 Elasticsearch 集群
+### 创建一个 Elasticsearch 集群
 
 登录阿里云控制台，搜索 Elasticsearch Service 产品，进入该产品控制台，点击 “新建” 集群按钮。
 
@@ -110,6 +109,9 @@ Elastic Stack 软件安装包清单：
 2. 选择合适的子网，建议练习用虚拟机也在相同子网。
 3. 选择增加 “协调节点”，否则无法开启 ES 集群的 https 访问
 4. 输入集群名、密码 (本练习中使用的密码是 Security%123，请在后续的课件中，在配置文件中替换成你自己的密码 )等信息，然后完成集群的创建。
+
+
+![新建 ES 集群 2](images/security-aliyun/2022-09-08_16-47-07.png)
 
 Negative
 : 注意：请确保将 Elasticsearch 服务运行正常，查看集群的基础配置，访问控制，私网访问地址， 记录本 ES 集群私网访问网址备用。集群创建成功后，修改 ES 集群的访问协议，使私网用 https 访问，ES 集群不需要开启公网访问。
@@ -237,7 +239,7 @@ Duration: 30
 
 下面分步骤配置三种最常用的 Beats 数据采集工具。
 
-###安装配置 Auditbeat
+### 安装配置 Auditbeat 采集操作系统事件
 
 Auditbeat 支持的操作系统包括：
 
@@ -267,7 +269,7 @@ sudo rpm -ivh https://mirrors.aliyun.com/elasticstack/7.x/yum/7.10.0/auditbeat-7
 ```sh
 sudo auditbeat setup -e \
   -E output.logstash.enabled=false \
-  -E output.elasticsearch.hosts=['192.168.0.14:9200'] \
+  -E output.elasticsearch.hosts=['https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200'] \
   -E output.elasticsearch.username=elastic \
   -E output.elasticsearch.password=Security%123\
   -E setup.kibana.host=https://es-cn-7pp2v2ce7001ivh93-kibana.internal.elasticsearch.aliyuncs.com
@@ -321,7 +323,7 @@ fields:
   env: workshop
 
 output.elasticsearch:
-  hosts: ["192.168.0.14:9200"]
+  hosts: ["https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200"]
   username: elastic
   password:  Security%123
   pipeline:  geoip-info
@@ -408,7 +410,7 @@ sudo systemctl status  auditbeat
 Negative
 : 注意：至此完成了 Auditbeat 在这个服务器上的部署和配置，并且确认仪表板中的数据都是更新的，这个 Beat采集代理的监控状态也正常。
 
-### 安装配置 Pecketbeat
+### 安装配置 Pecketbeat 采集网络事件
 
 Pecketbeat 是一个应用监控和性能分析系统，它可以嗅探服务器上发生的网络包，解码 7 层的网络消息，然后将分析结果发送到后台的 Elasticsearch 服务中进行分析， 支持的操作系统包括：
 
@@ -428,7 +430,7 @@ sudo rpm -ivh https://mirrors.aliyun.com/elasticstack/7.x/yum/7.10.0/packetbeat-
 ```sh
 sudo packetbeat setup -e \
   -E output.logstash.enabled=false \
-  -E output.elasticsearch.hosts=['192.168.0.14:9200'] \
+  -E output.elasticsearch.hosts=['https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200'] \
   -E output.elasticsearch.username=elastic \
   -E output.elasticsearch.password=Security%123\
   -E setup.kibana.host=https://es-cn-7pp2v2ce7001ivh93-kibana.internal.elasticsearch.aliyuncs.com
@@ -476,7 +478,7 @@ fields:
   env: workshop
 
 output.elasticsearch:
-  hosts: ["192.168.0.14:9200"]
+  hosts: ["https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200"]
   username: elastic
   password:  Security%123
   pipeline:  geoip-info
@@ -560,7 +562,7 @@ sudo yum update -y
 Negative
 : 注意：至此完成了 Packetbeat 的配置和调试工作，还可以再次确认相关仪表板和 Beat 代理监控的状态。
 
-### 安装配置 Filebeat
+### 安装配置 Filebeat 集成第三方系统
 
 在 Kibana 的主页上点击“添加数据”按钮后，点击 “安全”，这里展示的是 Elastic 官方支持的安全事件数据采集模块，大部分是通过 Filebeat 日志文件集成的方式完成。
 
@@ -579,7 +581,7 @@ sudo rpm -ivh https://mirrors.aliyun.com/elasticstack/7.x/yum/7.10.0/filebeat-7.
 ```sh
 sudo filebeat setup -e \
   -E output.logstash.enabled=false \
-  -E output.elasticsearch.hosts=['192.168.0.14:9200'] \
+  -E output.elasticsearch.hosts=['https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200'] \
   -E output.elasticsearch.username=elastic \
   -E output.elasticsearch.password=Security%123\
   -E setup.kibana.host=https://es-cn-7pp2v2ce7001ivh93-kibana.internal.elasticsearch.aliyuncs.com
@@ -612,7 +614,7 @@ fields:
   env: workshop
 
 output.elasticsearch:
-  hosts: ["192.168.0.14:9200"]
+  hosts: ["https://es-cn-7pp2v2ce7001ivh93.elasticsearch.aliyuncs.com:9200"]
   username: elastic
   password:  Security%123
   pipeline:  geoip-info
