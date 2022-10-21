@@ -41,6 +41,7 @@ Duration: 10
 * 虚拟机 A ：Linux OS， 用于安装 Elasticsearch ， Kibana ，Fleet 服务器， Beats 安装包下载服务器。
 * 虚拟机 B ：Linux OS， 用于使用 Elastic Agent 部署各种 Beats 实现各种采集功能。
 
+<!-- ------------------------ -->
 ## 安装 Elasticsearch
 Duration: 10
 
@@ -170,6 +171,7 @@ firewall-cmd --reload
 在浏览器里访问 es 的访问网址 https://10.0.30.105:9200/ ，忽略关于证书的安全提示，输入上面所修改的 elastic 账户信息，测试是否可以正常登录。
 
 
+<!-- ------------------------ -->
 ## 安装 Kibana
 Duration: 10
 
@@ -280,6 +282,7 @@ update-ca-trust extract
 建议将这个根证书也用这个方法复制到其他需要用 Elastic Agent 采集监控数据的操作系统中，并安装备用。也可以在 Elastic Agent 安装的时候指定忽略 ES 证书校验的参数。
 
 
+<!-- ------------------------ -->
 ## 安装 Fleet 服务器
 Duration: 10
 
@@ -310,6 +313,7 @@ sudo ./elastic-agent install \
 
 可以在 Kibana 的界面里查看 Fleet 服务器的监控信息。点击 Kibana 左上角的菜单：Observability ->      Infrastructure  ->   Inventory ，即可看到 Fleet 服务器的监控数据。
 
+<!-- ------------------------ -->
 ## 安装 Elastic Agent 监控代理
 Duration: 10
 
@@ -331,6 +335,7 @@ sudo ./elastic-agent install --url=https://10.0.30.105:8220 --enrollment-token=N
 ```
 通过执行上面的命令，我们就在被管理服务器上，一键式的安装了用于数据采集功能的 Elastic Agent ，并将其注册到 Fleet 服务器上。你也可以手工下载好 `elastic-agent-8.4.3-linux-x86_64.tar.gz ` 文件，但是反复在多个被管理服务器上复制也很麻烦。
 
+<!-- ------------------------ -->
 ## 搭建本地安装包下载服务器
 Duration: 10
 
@@ -479,6 +484,7 @@ cat /opt/Elastic/Agent/elastic-agent-20221018.ndjson
 
 在虚拟机 A&B 上完成本章节操作。
 
+<!-- ------------------------ -->
 ## 万用采集端的好处
 Duration: 10
 
@@ -499,6 +505,7 @@ Duration: 10
 
 ![查看 安全管理解决方案](2022-10-18_22-53-55.png)
 
+<!-- ------------------------ -->
 ## 常见问题
 Duration: 10
 
