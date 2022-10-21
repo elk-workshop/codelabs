@@ -7,7 +7,6 @@ authors: Martin Liu
 Feedback Link: https://github.com/martinliu/martinliu.github.io/discussions
 Analytics Account: UA-159133967-1
 
-
 # Elastic Stack 技术栈配置指南（v8.4）
 <!-- ------------------------ -->
 ## 课程概述 
@@ -23,7 +22,7 @@ Duration: 10
 6. 体验可观测性和安全管理方案的开箱即用功能
 
 
-![7.14 后的架构图](https://martinliu.cn/blog/fleet-and-elastic-agent/2022-10-17_23-36-03_hu864f31ad5498d8c494b4f2833cfe0df1_208313_1024x0_resize_box_3.png)
+![7.14 后的架构图](images/2022-10-17_23-36-03.png)
 
 
 核心组件概述：
@@ -292,7 +291,7 @@ Duration: 10
 
 回到 Fleet 主页，找到 agent 管理的地方，按照流程做，点击创建 Fleet  Server 配置。然后就会在页面上生成 Fleet 服务器的安装配置命令。
 
-![Fleet server](2022-10-18_10-46-39.png)
+![Fleet server](images/2022-10-18_10-46-39.png)
 
 按着提示的命令参数安装 Fleet 服务器。
 
@@ -313,6 +312,26 @@ sudo ./elastic-agent install \
 
 可以在 Kibana 的界面里查看 Fleet 服务器的监控信息。点击 Kibana 左上角的菜单：Observability ->      Infrastructure  ->   Inventory ，即可看到 Fleet 服务器的监控数据。
 
+为了让测试更加方便，还需要将 Output 到 Elasticsearch 的参数修改成不去校验 ssl 证书。否则 Elastic Agent 成功注册到 Fleet 服务器以后，数据还是无法正常上传到 Elasticsearch 服务器。配置方式如下图所示。
+
+![](images/2022-10-21_15-50-59.png)
+
+在 Fleet 服务器的 Settings 配置中，在 Outputs 部分，创建一条新的 Output 记录。
+
+* Hosts ： 指向 Elasticsearch 服务器的 ip 和 服务端口，用 https 协议。
+* 在高级 YAML 配置中加入一行忽略证书检查的参数： `ssl.verification_mode : none`
+
+保持了这条 Fleet 服务器的新配置以后，修改其他需要引用这个配置参数的管理策略。如下图。
+
+![](images/2022-10-21_15-53-23.png)
+
+新建或者编辑一条已有的 Agent Policy ：
+
+* 修改 Output for Integrations ： 从菜单中选出上面新建的那一条。
+* 修改 Output for Agent monitoring ： 从菜单中选出上面新建的那一条。
+  
+保存这条策略以后备用。
+
 <!-- ------------------------ -->
 ## 安装 Elastic Agent 监控代理
 Duration: 10
@@ -321,6 +340,10 @@ Duration: 10
 
 在 Fleet 的管理界面中新增一个名为 my-policy1 的管理策略，避免和 Fleet 服务器使用相同的策略。点击 Add agent 连接，获取如下代理注册命令。
 
+![](images/2022-10-21_16-14-50.png)
+
+
+
 ```sh
 curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-8.4.3-linux-x86_64.tar.gz 
 tar xzvf elastic-agent-8.4.3-linux-x86_64.tar.gz 
@@ -328,18 +351,26 @@ cd elastic-agent-8.4.3-linux-x86_64
 sudo ./elastic-agent install --url=https://10.0.30.105:8220 --enrollment-token=NW9ZTjZZTUJtUENhc0ZFTDI5SV86MkZQT1hlc2dUOEdWZnRrWWhNbXVjdw==  
 ```
 
-将上面的命令复制到一个写字板中，修改最后一条命令，在最后增加` --insecure ` 参数 
+将上面的命令复制到一个写字板中，修改最后一条命令，在最后增加` --insecure ` 参数，如果不加这个参数，远程 Agent 的注册就会由于无法信任 Fleet 服务器的自签名证书而失败。 
+
+你也可以手工下载好 `elastic-agent-8.4.3-linux-x86_64.tar.gz ` 文件，这样不用每次都重复从 Elastic 官网下载安装包；但是重复的在多个被管理服务器上复制也很麻烦。
 
 ```sh
 ./elastic-agent install --url=https://10.0.30.105:8220 --enrollment-token=NW9ZTjZZTUJtUENhc0ZFTDI5SV86MkZQT1hlc2dUOEdWZnRrWWhNbXVjdw==   --insecure
 ```
-通过执行上面的命令，我们就在被管理服务器上，一键式的安装了用于数据采集功能的 Elastic Agent ，并将其注册到 Fleet 服务器上。你也可以手工下载好 `elastic-agent-8.4.3-linux-x86_64.tar.gz ` 文件，但是反复在多个被管理服务器上复制也很麻烦。
+
+通过执行上面的命令，我们就在被管理服务器上，一键式的安装了用于数据采集功能的 Elastic Agent ，并将其注册到 Fleet 服务器上。
+
+Elastic Agent 的安装方式：
+
+* tar.gz : 在所有操作系统上「Windows，Linux，MacOS」都推荐，由于这里下载的 tar.gz 的安装包，用命令行一键式的安装成功以后，在操作系统中就会创建出后台的 Elastic Agent 主服务，这个服务进程会自动化其他所有 Beats 程序的安装工作，根据 Agent 策略，如果需要安装新的 Beats 就会下载安装，如果有新的版本就会根据策略升级，这样就解决了后续 Agent 这一侧的配置的生命周期管理。
+* PRM、DEB ： 这种方式也支持，但是 Elastic Agent 软件/服务本身的版本升级无法自动化实现。
 
 <!-- ------------------------ -->
 ## 搭建本地安装包下载服务器
 Duration: 10
 
-为了让局域网中的操作系统能就近下载 Elastic Stack 技术栈中，所有可以通过 Fleet 服务器管理（安装、配置、升级、删除等）的组件，我们可以参考文档的方法：https://www.elastic.co/guide/en/fleet/8.4/air-gapped.html#host-artifact-registry 在本地部署一个安装包下载服务器。
+为了让局域网中的被管理操作系统能在本地局域网里下载到 Elastic Stack 技术栈中，所有可以通过 Fleet 服务器管理（安装、配置、升级、删除等）的组件，我们可以参考文档的方法：https://www.elastic.co/guide/en/fleet/8.4/air-gapped.html#host-artifact-registry 在本地部署一个安装包下载服务器。
 
 首先，安装一个 Nginx 服务器，在根目录下创建目录 downloads ，并且运行下面的下载脚本。
 
@@ -444,13 +475,16 @@ downloads/
 ```
 重启 Nginix 服务器后，在浏览器中可以访问： http://192.168.10.10/downloads/ ，确保可以看到正确的目录结构和文件。
 
+
+![Agent Binary Download](images/2022-10-21_16-24-03.png)
+
 进入 Fleet 的配置页面，在  `Agent Binary Download` 下面点击 “Add agent binary source” ，新建一个新的代理安装包下载来源网站。
 
-![Agent Binary Download](2022-10-18_14-21-44.png)
+![Agent Binary Download](images/2022-10-18_14-21-44.png)
 
 在 Agent Policies 页面新建一个新的测试用 Agent 管理策略，名为 “my-policy2”；进入这个策略的配置界面，修改 *Agent Binary Download* 为刚才创建的下载源。保存并测试这个策略。
 
-![](2022-10-18_14-25-35.png)
+![](images/2022-10-18_14-25-35.png)
 
 点击 “Add agent” 连接，获取下面的新注册代理注册命令。
 
@@ -458,7 +492,7 @@ downloads/
 curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-8.4.3-linux-x86_64.tar.gz tar xzvf elastic-agent-8.4.3-linux-x86_64.tar.gz cd elastic-agent-8.4.3-linux-x86_64 sudo ./elastic-agent install --url=https://10.0.30.105:8220 --enrollment-token=R29qRDZZTUJtUENhc0ZFTFNDSW06bVFOeW5vcUpTQmFmZDBwLUgyTDBYZw==
 ```
 
-修改这些命令参数，如下：
+修改这些命令参数，将 tar.gz 的下载地址改为本地搭建的下载服务器地址，如下：
 
 ```shell
 curl -L -O http://192.168.10.10/downloads/beats/elastic-agent/elastic-agent-8.4.3-linux-x86_64.tar.gz 
@@ -482,7 +516,7 @@ cat /opt/Elastic/Agent/elastic-agent-20221018.ndjson
 
 用这个命令 `elastic-agent inspect` 也可以确认这个配置。
 
-在虚拟机 A&B 上完成本章节操作。
+
 
 <!-- ------------------------ -->
 ## 万用采集端的好处
@@ -490,7 +524,7 @@ Duration: 10
 
 在虚拟机 A&B 上完成本章节操作。
 
-为了验证这个功能，可以尝试更新当前的一个 policy，增加 Packetbeat 数据采集能力。操作步骤如下：
+为了验证这个功能，可以尝试更新当前的一个 policy，在其中增加 Packetbeat 数据采集能力。操作步骤如下：
 
 1. 打开当前的一个正在使用中 policy
 2. 点击 Add intergation 按钮，在众多选项中选择 Network Packet Capture 模块。
@@ -499,20 +533,20 @@ Duration: 10
 5. 这些节点会自动的，很快的更新到新的管理策略中，Elastic Agent 会自动化安装 Packetbeat 采集模块。
 6. 返回 Kiban ，进入安全管理解决方案，我们可以看到 Filebeat 和 Packetbeat 的采集结果。
 
-![添加 Packetbeat 模块](2022-10-18_22-49-08.png)
+![添加 Packetbeat 模块](images/2022-10-18_22-49-08.png)
 
 在策略更新了以后，我们没有在 Elastic Agent 端做任何操作，它就已经自动化的下载新的策略，并更新了自身。
 
-![查看 安全管理解决方案](2022-10-18_22-53-55.png)
+![查看 安全管理解决方案](images/2022-10-18_22-53-55.png)
 
 <!-- ------------------------ -->
 ## 常见问题
-Duration: 10
+Duration: 2
 
 
-Elastic Agent 在采集数据的服务上安装正常，在 Fleet 服务器的管理界面中也可以看到其状态正常。但是在可观测性的页面中看不到它的任何数据。
+Elastic Agent 在采集数据的服务上安装正常，在 Fleet 服务器的管理界面中也可以看到其状态正常。但是在可观测性的页面中看不到它的任何数据。 主要是由于 Elasticsearch 服务器强制是用 https 协议，客户端没有配置好数字证书的话，必须在Fleet服务器的配置中规避掉，ssl 证书校验的功能。
 
-可能的原因：Elastic Agent 采集端程序和 ES 后台服务器的通讯不正常，检查 9200 端口，用 curl + ES 服务器端的数字证书，用户名和密码，尝试访问 ES 的服务地址 `https://192.168.10.10:9200`。
+其他可能的原因：Elastic Agent 采集端程序和 ES 后台服务器的通讯不正常，检查 9200 端口，用 curl + ES 服务器端的数字证书，用户名和密码，尝试访问 ES 的服务地址 `https://192.168.10.10:9200`。
 
 也可以尝试在 Fleet 的管理页面上删除这个 Agent；然后在被管理服务器上，用命令 `elastic-agent uninstall` 删除服务，然后重新安装注册这个被管理服务器，注意在注册命令的最后面可以尝试增加这两个参数：`
 --insecure --fleet-server-es-insecure` 第一个参数是忽略 Fleet 服务器的 ssl 证书校验，第二个参数是忽略 es 服务器的 ssl 证书校验。或者尝试重新手工安装一遍 es 服务器上的 ca 根证书。
